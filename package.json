@@ -1,6 +1,6 @@
 {
   "title": "html2canvas",
-  "name": "html2canvas",
+  "name": "@medondo/html2canvas",
   "description": "Screenshots with JavaScript",
   "main": "dist/html2canvas.js",
   "module": "dist/html2canvas.esm.js",
@@ -112,5 +112,8 @@
   "license": "MIT",
   "dependencies": {
     "css-line-break": "1.1.1"
+  },
+  "publishConfig": {
+    "registry": "https://nexus.medondo.com/repository/npm-private/"
   }
 }
