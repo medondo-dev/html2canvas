@@ -5,7 +5,7 @@ import {color, Color} from '../types/color';
 import {isLength, Length} from '../types/length';
 
 export type BoxShadow = BoxShadowItem[];
-interface BoxShadowItem {
+export interface BoxShadowItem {
     inset: boolean;
     color: Color;
     offsetX: Length;

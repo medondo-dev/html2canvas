@@ -107,7 +107,7 @@ var renderElement = function (element, opts) { return __awaiter(_this, void 0, v
                 options = __assign({}, defaultOptions, resourceOptions, opts);
                 windowBounds = new bounds_1.Bounds(options.scrollX, options.scrollY, options.windowWidth, options.windowHeight);
                 logger_1.Logger.create({ id: instanceName, enabled: options.logging });
-                logger_1.Logger.getInstance(instanceName).debug("Starting document clone");
+                logger_1.Logger.getInstance(instanceName).debug("Starting document clone. hmhmhm");
                 documentCloner = new document_cloner_1.DocumentCloner(element, {
                     id: instanceName,
                     onclone: options.onclone,

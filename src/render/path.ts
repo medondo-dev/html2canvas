@@ -7,6 +7,7 @@ export enum PathType {
 
 export interface IPath {
     type: PathType;
+    reverse(): IPath;
     add(deltaX: number, deltaY: number): IPath;
 }
 
@@ -32,6 +33,15 @@ export const transformPath = (path: Path[], deltaX: number, deltaY: number, delt
         }
         return point;
     });
+};
+
+export const reversePath = (path: Path[]): Path[] => {
+    return path
+        .slice(0)
+        .reverse()
+        .map(point => {
+            return point.reverse();
+        });
 };
 
 export type Path = Vector | BezierCurve;

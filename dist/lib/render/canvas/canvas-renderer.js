@@ -67,7 +67,7 @@ var text_align_1 = require("../../css/property-descriptors/text-align");
 var textarea_element_container_1 = require("../../dom/elements/textarea-element-container");
 var select_element_container_1 = require("../../dom/elements/select-element-container");
 var iframe_element_container_1 = require("../../dom/replaced-elements/iframe-element-container");
-var MASK_OFFSET = 10000;
+// const MASK_OFFSET = 0;
 var CanvasRenderer = /** @class */ (function () {
     function CanvasRenderer(options) {
         this._activeEffects = [];
@@ -96,9 +96,6 @@ var CanvasRenderer = /** @class */ (function () {
     };
     CanvasRenderer.prototype.applyEffect = function (effect) {
         this.ctx.save();
-        if (effects_1.isOpacityEffect(effect)) {
-            this.ctx.globalAlpha = effect.opacity;
-        }
         if (effects_1.isTransformEffect(effect)) {
             this.ctx.translate(effect.offsetX, effect.offsetY);
             this.ctx.transform(effect.matrix[0], effect.matrix[1], effect.matrix[2], effect.matrix[3], effect.matrix[4], effect.matrix[5]);
@@ -122,6 +119,7 @@ var CanvasRenderer = /** @class */ (function () {
                     case 0:
                         styles = stack.element.container.styles;
                         if (!styles.isVisible()) return [3 /*break*/, 2];
+                        this.ctx.globalAlpha = styles.opacity;
                         return [4 /*yield*/, this.renderStackContent(stack)];
                     case 1:
                         _a.sent();
@@ -731,29 +729,7 @@ var CanvasRenderer = /** @class */ (function () {
                         styles.boxShadow
                             .slice(0)
                             .reverse()
-                            .forEach(function (shadow) {
-                            _this.ctx.save();
-                            var borderBoxArea = bound_curves_1.calculateBorderBoxPath(paint.curves);
-                            var maskOffset = shadow.inset ? 0 : MASK_OFFSET;
-                            var shadowPaintingArea = path_1.transformPath(borderBoxArea, -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number, (shadow.inset ? 1 : -1) * shadow.spread.number, shadow.spread.number * (shadow.inset ? -2 : 2), shadow.spread.number * (shadow.inset ? -2 : 2));
-                            if (shadow.inset) {
-                                _this.path(borderBoxArea);
-                                _this.ctx.clip();
-                                _this.mask(shadowPaintingArea);
-                            }
-                            else {
-                                _this.mask(borderBoxArea);
-                                _this.ctx.clip();
-                                _this.path(shadowPaintingArea);
-                            }
-                            _this.ctx.shadowOffsetX = shadow.offsetX.number + maskOffset;
-                            _this.ctx.shadowOffsetY = shadow.offsetY.number;
-                            _this.ctx.shadowColor = color_1.asString(shadow.color);
-                            _this.ctx.shadowBlur = shadow.blur.number;
-                            _this.ctx.fillStyle = shadow.inset ? color_1.asString(shadow.color) : 'rgba(0,0,0,1)';
-                            _this.ctx.fill();
-                            _this.ctx.restore();
-                        });
+                            .forEach(function (shadow) { return _this.drawShadow(paint, shadow); });
                         _a.label = 2;
                     case 2:
                         side = 0;
@@ -777,6 +753,31 @@ var CanvasRenderer = /** @class */ (function () {
                 }
             });
         });
+    };
+    CanvasRenderer.prototype.drawShadow = function (paint, shadow) {
+        this.ctx.save();
+        var borderBoxArea = bound_curves_1.calculateBorderBoxPath(paint.curves);
+        var maskOffset = shadow.inset ? 0 : 1;
+        var shadowPaintingArea = path_1.transformPath(borderBoxArea, -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number, (shadow.inset ? 1 : -1) * shadow.spread.number, shadow.spread.number * (shadow.inset ? -2 : 2), shadow.spread.number * (shadow.inset ? -2 : 2));
+        if (shadow.inset) {
+            this.path(borderBoxArea);
+            this.ctx.clip();
+            this.mask(shadowPaintingArea);
+        }
+        else {
+            this.mask(borderBoxArea);
+            this.ctx.clip();
+            this.path(shadowPaintingArea);
+        }
+        this.ctx.shadowOffsetX = shadow.offsetX.number * 2;
+        this.ctx.shadowOffsetY = shadow.offsetY.number * 2;
+        this.ctx.shadowColor = color_1.asString(shadow.color);
+        this.ctx.shadowBlur = shadow.blur.number * 2;
+        if (paint.container.styles.backgroundColor !== 0) {
+            this.ctx.fillStyle = color_1.asString(shadow.color);
+        }
+        this.ctx.fill();
+        this.ctx.restore();
     };
     CanvasRenderer.prototype.render = function (element) {
         return __awaiter(this, void 0, void 0, function () {

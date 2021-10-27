@@ -9,6 +9,7 @@ import { Cache } from '../../core/cache-storage';
 import { TextBounds } from '../../css/layout/text';
 import { ReplacedElementContainer } from '../../dom/replaced-elements/index';
 import { EffectTarget, IElementEffect } from '../effects';
+import { BoxShadowItem } from '../../css/property-descriptors/box-shadow';
 export declare type RenderConfigurations = RenderOptions & {
     backgroundColor: Color | null;
 };
@@ -52,5 +53,6 @@ export declare class CanvasRenderer {
     renderBackgroundImage(container: ElementContainer): Promise<void>;
     renderBorder(color: Color, side: number, curvePoints: BoundCurves): Promise<void>;
     renderNodeBackgroundAndBorders(paint: ElementPaint): Promise<void>;
+    drawShadow(paint: ElementPaint, shadow: BoxShadowItem): void;
     render(element: ElementContainer): Promise<HTMLCanvasElement>;
 }
