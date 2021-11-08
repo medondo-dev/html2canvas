@@ -6,7 +6,7 @@
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
-    (global = global || self, global.html2canvas = factory());
+    (global = global || self, global['@medondo/html2canvas'] = factory());
 }(this, function () { 'use strict';
 
     /*! *****************************************************************************
@@ -1756,7 +1756,7 @@
         var blue = 0xff & (color >> 8);
         var green = 0xff & (color >> 16);
         var red = 0xff & (color >> 24);
-        return alpha < 255 ? "rgba(" + red + "," + green + "," + blue + "," + alpha / 255 + ")" : "rgb(" + red + "," + green + "," + blue + ")";
+        return alpha < 255 ? "rgba(" + red + "," + green + "," + blue + "," + (alpha / 255).toFixed(2) + ")" : "rgb(" + red + "," + green + "," + blue + ")";
     };
     var pack = function (r, g, b, a) {
         return ((r << 24) | (g << 16) | (b << 8) | (Math.round(a * 255) << 0)) >>> 0;
@@ -5242,6 +5242,7 @@
             var window = node.ownerDocument.defaultView;
             if (window && isElementNode(node) && (isHTMLElementNode(node) || isSVGElementNode(node))) {
                 var clone = this.createElementClone(node);
+                clone.style.transitionProperty = 'none';
                 var style = window.getComputedStyle(node);
                 var styleBefore = window.getComputedStyle(node, ':before');
                 var styleAfter = window.getComputedStyle(node, ':after');
@@ -5511,6 +5512,9 @@
         Vector.prototype.add = function (deltaX, deltaY) {
             return new Vector(this.x + deltaX, this.y + deltaY);
         };
+        Vector.prototype.reverse = function () {
+            return this;
+        };
         return Vector;
     }());
 
@@ -5706,7 +5710,6 @@
         return effect.type === 0 /* TRANSFORM */;
     };
     var isClipEffect = function (effect) { return effect.type === 1 /* CLIP */; };
-    var isOpacityEffect = function (effect) { return effect.type === 2 /* OPACITY */; };
 
     var StackingContext = /** @class */ (function () {
         function StackingContext(container) {
@@ -6130,7 +6133,7 @@
         return FontMetrics;
     }());
 
-    var MASK_OFFSET = 10000;
+    // const MASK_OFFSET = 0;
     var CanvasRenderer = /** @class */ (function () {
         function CanvasRenderer(options) {
             this._activeEffects = [];
@@ -6159,9 +6162,6 @@
         };
         CanvasRenderer.prototype.applyEffect = function (effect) {
             this.ctx.save();
-            if (isOpacityEffect(effect)) {
-                this.ctx.globalAlpha = effect.opacity;
-            }
             if (isTransformEffect(effect)) {
                 this.ctx.translate(effect.offsetX, effect.offsetY);
                 this.ctx.transform(effect.matrix[0], effect.matrix[1], effect.matrix[2], effect.matrix[3], effect.matrix[4], effect.matrix[5]);
@@ -6185,6 +6185,7 @@
                         case 0:
                             styles = stack.element.container.styles;
                             if (!styles.isVisible()) return [3 /*break*/, 2];
+                            this.ctx.globalAlpha = styles.opacity;
                             return [4 /*yield*/, this.renderStackContent(stack)];
                         case 1:
                             _a.sent();
@@ -6794,29 +6795,7 @@
                             styles.boxShadow
                                 .slice(0)
                                 .reverse()
-                                .forEach(function (shadow) {
-                                _this.ctx.save();
-                                var borderBoxArea = calculateBorderBoxPath(paint.curves);
-                                var maskOffset = shadow.inset ? 0 : MASK_OFFSET;
-                                var shadowPaintingArea = transformPath(borderBoxArea, -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number, (shadow.inset ? 1 : -1) * shadow.spread.number, shadow.spread.number * (shadow.inset ? -2 : 2), shadow.spread.number * (shadow.inset ? -2 : 2));
-                                if (shadow.inset) {
-                                    _this.path(borderBoxArea);
-                                    _this.ctx.clip();
-                                    _this.mask(shadowPaintingArea);
-                                }
-                                else {
-                                    _this.mask(borderBoxArea);
-                                    _this.ctx.clip();
-                                    _this.path(shadowPaintingArea);
-                                }
-                                _this.ctx.shadowOffsetX = shadow.offsetX.number + maskOffset;
-                                _this.ctx.shadowOffsetY = shadow.offsetY.number;
-                                _this.ctx.shadowColor = asString(shadow.color);
-                                _this.ctx.shadowBlur = shadow.blur.number;
-                                _this.ctx.fillStyle = shadow.inset ? asString(shadow.color) : 'rgba(0,0,0,1)';
-                                _this.ctx.fill();
-                                _this.ctx.restore();
-                            });
+                                .forEach(function (shadow) { return _this.drawShadow(paint, shadow); });
                             _a.label = 2;
                         case 2:
                             side = 0;
@@ -6840,6 +6819,31 @@
                     }
                 });
             });
+        };
+        CanvasRenderer.prototype.drawShadow = function (paint, shadow) {
+            this.ctx.save();
+            var borderBoxArea = calculateBorderBoxPath(paint.curves);
+            var maskOffset = shadow.inset ? 0 : 1;
+            var shadowPaintingArea = transformPath(borderBoxArea, -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number, (shadow.inset ? 1 : -1) * shadow.spread.number, shadow.spread.number * (shadow.inset ? -2 : 2), shadow.spread.number * (shadow.inset ? -2 : 2));
+            if (shadow.inset) {
+                this.path(borderBoxArea);
+                this.ctx.clip();
+                this.mask(shadowPaintingArea);
+            }
+            else {
+                this.mask(borderBoxArea);
+                this.ctx.clip();
+                this.path(shadowPaintingArea);
+            }
+            this.ctx.shadowOffsetX = shadow.offsetX.number * 2;
+            this.ctx.shadowOffsetY = shadow.offsetY.number * 2;
+            this.ctx.shadowColor = asString(shadow.color);
+            this.ctx.shadowBlur = shadow.blur.number * 2;
+            if (paint.container.styles.backgroundColor !== 0) {
+                this.ctx.fillStyle = asString(shadow.color);
+            }
+            this.ctx.fill();
+            this.ctx.restore();
         };
         CanvasRenderer.prototype.render = function (element) {
             return __awaiter(this, void 0, void 0, function () {
@@ -6995,7 +6999,7 @@
                     options = __assign({}, defaultOptions, resourceOptions, opts);
                     windowBounds = new Bounds(options.scrollX, options.scrollY, options.windowWidth, options.windowHeight);
                     Logger.create({ id: instanceName, enabled: options.logging });
-                    Logger.getInstance(instanceName).debug("Starting document clone");
+                    Logger.getInstance(instanceName).debug("Starting document clone. hmhmhm");
                     documentCloner = new DocumentCloner(element, {
                         id: instanceName,
                         onclone: options.onclone,

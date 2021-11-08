@@ -256,6 +256,7 @@ var DocumentCloner = /** @class */ (function () {
         var window = node.ownerDocument.defaultView;
         if (window && node_parser_1.isElementNode(node) && (node_parser_1.isHTMLElementNode(node) || node_parser_1.isSVGElementNode(node))) {
             var clone = this.createElementClone(node);
+            clone.style.transitionProperty = 'none';
             var style = window.getComputedStyle(node);
             var styleBefore = window.getComputedStyle(node, ':before');
             var styleAfter = window.getComputedStyle(node, ':after');

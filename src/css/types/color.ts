@@ -66,7 +66,7 @@ export const asString = (color: Color) => {
     const blue = 0xff & (color >> 8);
     const green = 0xff & (color >> 16);
     const red = 0xff & (color >> 24);
-    return alpha < 255 ? `rgba(${red},${green},${blue},${alpha / 255})` : `rgb(${red},${green},${blue})`;
+    return alpha < 255 ? `rgba(${red},${green},${blue},${(alpha / 255).toFixed(2)})` : `rgb(${red},${green},${blue})`;
 };
 
 export const pack = (r: number, g: number, b: number, a: number): Color =>

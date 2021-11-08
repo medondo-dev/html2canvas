@@ -10,6 +10,9 @@ var Vector = /** @class */ (function () {
     Vector.prototype.add = function (deltaX, deltaY) {
         return new Vector(this.x + deltaX, this.y + deltaY);
     };
+    Vector.prototype.reverse = function () {
+        return this;
+    };
     return Vector;
 }());
 exports.Vector = Vector;

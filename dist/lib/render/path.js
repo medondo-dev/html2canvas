@@ -26,4 +26,12 @@ exports.transformPath = function (path, deltaX, deltaY, deltaW, deltaH) {
         return point;
     });
 };
+exports.reversePath = function (path) {
+    return path
+        .slice(0)
+        .reverse()
+        .map(function (point) {
+        return point.reverse();
+    });
+};
 //# sourceMappingURL=path.js.map

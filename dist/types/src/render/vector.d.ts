@@ -5,5 +5,6 @@ export declare class Vector implements IPath {
     y: number;
     constructor(x: number, y: number);
     add(deltaX: number, deltaY: number): Vector;
+    reverse(): Vector;
 }
 export declare const isVector: (path: Path) => path is Vector;

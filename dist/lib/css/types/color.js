@@ -57,7 +57,7 @@ exports.asString = function (color) {
     var blue = 0xff & (color >> 8);
     var green = 0xff & (color >> 16);
     var red = 0xff & (color >> 24);
-    return alpha < 255 ? "rgba(" + red + "," + green + "," + blue + "," + alpha / 255 + ")" : "rgb(" + red + "," + green + "," + blue + ")";
+    return alpha < 255 ? "rgba(" + red + "," + green + "," + blue + "," + (alpha / 255).toFixed(2) + ")" : "rgb(" + red + "," + green + "," + blue + ")";
 };
 exports.pack = function (r, g, b, a) {
     return ((r << 24) | (g << 16) | (b << 8) | (Math.round(a * 255) << 0)) >>> 0;

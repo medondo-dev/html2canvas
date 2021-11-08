@@ -22,7 +22,7 @@ import {contentBox} from '../box-sizing';
 import {CanvasElementContainer} from '../../dom/replaced-elements/canvas-element-container';
 import {SVGElementContainer} from '../../dom/replaced-elements/svg-element-container';
 import {ReplacedElementContainer} from '../../dom/replaced-elements/index';
-import {EffectTarget, IElementEffect, isClipEffect, isOpacityEffect, isTransformEffect} from '../effects';
+import {EffectTarget, IElementEffect, isClipEffect, isTransformEffect} from '../effects';
 import {contains} from '../../core/bitwise';
 import {calculateGradientDirection, calculateRadius, processColorStops} from '../../css/types/functions/gradient';
 import {FIFTY_PERCENT, getAbsoluteValue} from '../../css/types/length-percentage';
@@ -38,6 +38,7 @@ import {TextareaElementContainer} from '../../dom/elements/textarea-element-cont
 import {SelectElementContainer} from '../../dom/elements/select-element-container';
 import {IFrameElementContainer} from '../../dom/replaced-elements/iframe-element-container';
 import {TextShadow} from '../../css/property-descriptors/text-shadow';
+import {BoxShadowItem} from '../../css/property-descriptors/box-shadow';
 
 export type RenderConfigurations = RenderOptions & {
     backgroundColor: Color | null;
@@ -58,7 +59,7 @@ export interface RenderOptions {
     cache: Cache;
 }
 
-const MASK_OFFSET = 10000;
+// const MASK_OFFSET = 0;
 
 export class CanvasRenderer {
     canvas: HTMLCanvasElement;
@@ -99,10 +100,6 @@ export class CanvasRenderer {
 
     applyEffect(effect: IElementEffect) {
         this.ctx.save();
-        if (isOpacityEffect(effect)) {
-            this.ctx.globalAlpha = effect.opacity;
-        }
-
         if (isTransformEffect(effect)) {
             this.ctx.translate(effect.offsetX, effect.offsetY);
             this.ctx.transform(
@@ -132,6 +129,7 @@ export class CanvasRenderer {
     async renderStack(stack: StackingContext) {
         const styles = stack.element.container.styles;
         if (styles.isVisible()) {
+            this.ctx.globalAlpha = styles.opacity;
             await this.renderStackContent(stack);
         }
     }
@@ -670,37 +668,7 @@ export class CanvasRenderer {
             styles.boxShadow
                 .slice(0)
                 .reverse()
-                .forEach(shadow => {
-                    this.ctx.save();
-                    const borderBoxArea = calculateBorderBoxPath(paint.curves);
-                    const maskOffset = shadow.inset ? 0 : MASK_OFFSET;
-                    const shadowPaintingArea = transformPath(
-                        borderBoxArea,
-                        -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number,
-                        (shadow.inset ? 1 : -1) * shadow.spread.number,
-                        shadow.spread.number * (shadow.inset ? -2 : 2),
-                        shadow.spread.number * (shadow.inset ? -2 : 2)
-                    );
-
-                    if (shadow.inset) {
-                        this.path(borderBoxArea);
-                        this.ctx.clip();
-                        this.mask(shadowPaintingArea);
-                    } else {
-                        this.mask(borderBoxArea);
-                        this.ctx.clip();
-                        this.path(shadowPaintingArea);
-                    }
-
-                    this.ctx.shadowOffsetX = shadow.offsetX.number + maskOffset;
-                    this.ctx.shadowOffsetY = shadow.offsetY.number;
-                    this.ctx.shadowColor = asString(shadow.color);
-                    this.ctx.shadowBlur = shadow.blur.number;
-                    this.ctx.fillStyle = shadow.inset ? asString(shadow.color) : 'rgba(0,0,0,1)';
-
-                    this.ctx.fill();
-                    this.ctx.restore();
-                });
+                .forEach(shadow => this.drawShadow(paint, shadow));
         }
 
         let side = 0;
@@ -710,6 +678,40 @@ export class CanvasRenderer {
             }
             side++;
         }
+    }
+
+    drawShadow(paint: ElementPaint, shadow: BoxShadowItem) {
+        this.ctx.save();
+        const borderBoxArea = calculateBorderBoxPath(paint.curves);
+        const maskOffset = shadow.inset ? 0 : 1;
+        const shadowPaintingArea = transformPath(
+            borderBoxArea,
+            -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number,
+            (shadow.inset ? 1 : -1) * shadow.spread.number,
+            shadow.spread.number * (shadow.inset ? -2 : 2),
+            shadow.spread.number * (shadow.inset ? -2 : 2)
+        );
+
+        if (shadow.inset) {
+            this.path(borderBoxArea);
+            this.ctx.clip();
+            this.mask(shadowPaintingArea);
+        } else {
+            this.mask(borderBoxArea);
+            this.ctx.clip();
+            this.path(shadowPaintingArea);
+        }
+
+        this.ctx.shadowOffsetX = shadow.offsetX.number * 2;
+        this.ctx.shadowOffsetY = shadow.offsetY.number * 2;
+        this.ctx.shadowColor = asString(shadow.color);
+        this.ctx.shadowBlur = shadow.blur.number * 2;
+        if (paint.container.styles.backgroundColor !== 0) {
+            this.ctx.fillStyle = asString(shadow.color);
+        }
+
+        this.ctx.fill();
+        this.ctx.restore();
     }
 
     async render(element: ElementContainer): Promise<HTMLCanvasElement> {
