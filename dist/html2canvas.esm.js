@@ -6817,7 +6817,7 @@ var CanvasRenderer = /** @class */ (function () {
     CanvasRenderer.prototype.drawShadow = function (paint, shadow) {
         this.ctx.save();
         var borderBoxArea = calculateBorderBoxPath(paint.curves);
-        var maskOffset = shadow.inset ? 0 : 1;
+        var maskOffset = shadow.inset ? 0 : 10000;
         var shadowPaintingArea = transformPath(borderBoxArea, -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number, (shadow.inset ? 1 : -1) * shadow.spread.number, shadow.spread.number * (shadow.inset ? -2 : 2), shadow.spread.number * (shadow.inset ? -2 : 2));
         if (shadow.inset) {
             this.path(borderBoxArea);

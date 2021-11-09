@@ -683,7 +683,7 @@ export class CanvasRenderer {
     drawShadow(paint: ElementPaint, shadow: BoxShadowItem) {
         this.ctx.save();
         const borderBoxArea = calculateBorderBoxPath(paint.curves);
-        const maskOffset = shadow.inset ? 0 : 1;
+        const maskOffset = shadow.inset ? 0 : 10000;
         const shadowPaintingArea = transformPath(
             borderBoxArea,
             -maskOffset + (shadow.inset ? 1 : -1) * shadow.spread.number,
